@@ -1,0 +1,73 @@
+name: Publish package
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: macos-14
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Run tests
+        run: |
+          xcodebuild test \
+            -project Tinitch.xcodeproj \
+            -scheme Tinitch \
+            -destination 'platform=macOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
+
+      - name: Archive app
+        run: |
+          xcodebuild archive \
+            -project Tinitch.xcodeproj \
+            -scheme Tinitch \
+            -configuration Release \
+            -destination 'generic/platform=macOS' \
+            -archivePath "$RUNNER_TEMP/Tinitch.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
+
+      - name: Create disk image
+        env:
+          VERSION: ${{ github.ref_name }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/Tinitch-dmg"
+          ditto "$RUNNER_TEMP/Tinitch.xcarchive/Products/Applications/Tinitch.app" \
+            "$RUNNER_TEMP/Tinitch-dmg/Tinitch.app"
+          hdiutil create \
+            -volname "Tinitch ${VERSION}" \
+            -srcfolder "$RUNNER_TEMP/Tinitch-dmg" \
+            -ov \
+            -format UDZO \
+            "$RUNNER_TEMP/Tinitch-${VERSION}.dmg"
+
+      - name: Install ORAS
+        uses: oras-project/setup-oras@v1
+
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ github.token }}" | oras login ghcr.io --username "${{ github.actor }}" --password-stdin
+
+      - name: Publish package
+        env:
+          VERSION: ${{ github.ref_name }}
+          SOURCE_URL: ${{ github.server_url }}/${{ github.repository }}
+        run: |
+          package="ghcr.io/$(printf '%s' "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')"
+          cd "$RUNNER_TEMP"
+          oras push "${package}:${VERSION}" \
+            --artifact-type "application/vnd.tinitch.macos-application" \
+            --annotation "org.opencontainers.image.source=${SOURCE_URL}" \
+            --annotation "org.opencontainers.image.revision=${GITHUB_SHA}" \
+            --annotation "org.opencontainers.image.version=${VERSION}" \
+            "Tinitch-${VERSION}.dmg:application/x-apple-diskimage"
