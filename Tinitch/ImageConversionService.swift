@@ -33,6 +33,18 @@ struct ImageConversionService: Sendable {
         }.value
     }
 
+    func validate(inputURL: URL) throws {
+        guard let source = CGImageSourceCreateWithURL(inputURL as CFURL, nil),
+              let sourceType = CGImageSourceGetType(source)
+        else {
+            throw ConversionError.unreadableInput
+        }
+
+        guard Self.allowedTypes.contains(sourceType as String) else {
+            throw ConversionError.unsupportedFormat
+        }
+    }
+
     private static func convertSynchronously(inputURL: URL, outputURL: URL) throws {
         guard let source = CGImageSourceCreateWithURL(inputURL as CFURL, nil),
               let sourceType = CGImageSourceGetType(source)
@@ -40,8 +52,7 @@ struct ImageConversionService: Sendable {
             throw ConversionError.unreadableInput
         }
 
-        let allowedTypes = [UTType.jpeg.identifier, UTType.png.identifier]
-        guard allowedTypes.contains(sourceType as String) else {
+        guard Self.allowedTypes.contains(sourceType as String) else {
             throw ConversionError.unsupportedFormat
         }
 
@@ -88,4 +99,9 @@ struct ImageConversionService: Sendable {
             throw ConversionError.unableToWrite
         }
     }
+
+    private static let allowedTypes = [
+        UTType.jpeg.identifier,
+        UTType.png.identifier,
+    ]
 }

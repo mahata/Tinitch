@@ -116,6 +116,23 @@ struct ImageConversionServiceTests {
     }
 
     @Test
+    func validatesSupportedImageFormatsBeforeConversion() throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let inputURL = directory.appendingPathComponent("input.gif")
+        try writeImage(
+            makeImage(width: 1, height: 1, pixels: [255, 0, 0, 255]),
+            type: .gif,
+            to: inputURL
+        )
+
+        #expect(throws: ImageConversionService.ConversionError.unsupportedFormat) {
+            try service.validate(inputURL: inputURL)
+        }
+    }
+
+    @Test
     func invalidInputDoesNotCreateOutput() async throws {
         let directory = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }

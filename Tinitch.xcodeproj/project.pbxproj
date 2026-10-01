@@ -12,6 +12,8 @@
 		A10000000000000000000003 /* ImageConversionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000003 /* ImageConversionService.swift */; };
 		A10000000000000000000004 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* Assets.xcassets */; };
 		A10000000000000000000005 /* ImageConversionServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000006 /* ImageConversionServiceTests.swift */; };
+		A10000000000000000000006 /* ImagePreviewLoaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000009 /* ImagePreviewLoaderTests.swift */; };
+		A10000000000000000000007 /* ImagePreviewLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000010 /* ImagePreviewLoader.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -33,6 +35,8 @@
 		A20000000000000000000006 /* ImageConversionServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageConversionServiceTests.swift; sourceTree = "<group>"; };
 		A20000000000000000000007 /* Tinitch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Tinitch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A20000000000000000000008 /* TinitchTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TinitchTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A20000000000000000000009 /* ImagePreviewLoaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePreviewLoaderTests.swift; sourceTree = "<group>"; };
+		A20000000000000000000010 /* ImagePreviewLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePreviewLoader.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,6 +72,7 @@
 				A20000000000000000000001 /* TinitchApp.swift */,
 				A20000000000000000000002 /* ContentView.swift */,
 				A20000000000000000000003 /* ImageConversionService.swift */,
+				A20000000000000000000010 /* ImagePreviewLoader.swift */,
 				A20000000000000000000004 /* Assets.xcassets */,
 				A20000000000000000000005 /* Tinitch.entitlements */,
 			);
@@ -78,6 +83,7 @@
 			isa = PBXGroup;
 			children = (
 				A20000000000000000000006 /* ImageConversionServiceTests.swift */,
+				A20000000000000000000009 /* ImagePreviewLoaderTests.swift */,
 			);
 			path = TinitchTests;
 			sourceTree = "<group>";
@@ -193,6 +199,7 @@
 				A10000000000000000000001 /* TinitchApp.swift in Sources */,
 				A10000000000000000000002 /* ContentView.swift in Sources */,
 				A10000000000000000000003 /* ImageConversionService.swift in Sources */,
+				A10000000000000000000007 /* ImagePreviewLoader.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -201,6 +208,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A10000000000000000000005 /* ImageConversionServiceTests.swift in Sources */,
+				A10000000000000000000006 /* ImagePreviewLoaderTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
