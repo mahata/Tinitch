@@ -25,7 +25,9 @@ xcodebuild -project Tinitch.xcodeproj -scheme Tinitch test
 ## Publish to GitHub Packages
 
 Push a version tag to build and publish an unsigned macOS disk image to a
-versioned OCI package in GitHub Container Registry:
+versioned OCI package in GitHub Container Registry. Tags must use OCI-safe
+semantic versions such as `v1.2.3` or `v1.2.3-beta.1`; SemVer build metadata
+containing `+` is not supported:
 
 ```sh
 git tag v0.1.0
