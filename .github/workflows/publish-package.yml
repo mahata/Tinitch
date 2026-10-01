@@ -1,0 +1,82 @@
+name: Publish package
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: macos-15
+    steps:
+      - name: Validate version tag
+        env:
+          VERSION: ${{ github.ref_name }}
+        run: |
+          if [[ ${#VERSION} -gt 128 || ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z]+([.-][0-9A-Za-z]+)*)?$ ]]; then
+            echo "Version tag must be OCI-safe SemVer, for example v1.2.3 or v1.2.3-beta.1." >&2
+            exit 1
+          fi
+
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Run tests
+        run: |
+          xcodebuild test \
+            -project Tinitch.xcodeproj \
+            -scheme Tinitch \
+            -destination 'platform=macOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
+
+      - name: Archive app
+        run: |
+          xcodebuild archive \
+            -project Tinitch.xcodeproj \
+            -scheme Tinitch \
+            -configuration Release \
+            -destination 'generic/platform=macOS' \
+            -archivePath "$RUNNER_TEMP/Tinitch.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
+
+      - name: Create disk image
+        env:
+          VERSION: ${{ github.ref_name }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/Tinitch-dmg"
+          ditto "$RUNNER_TEMP/Tinitch.xcarchive/Products/Applications/Tinitch.app" \
+            "$RUNNER_TEMP/Tinitch-dmg/Tinitch.app"
+          hdiutil create \
+            -volname "Tinitch ${VERSION}" \
+            -srcfolder "$RUNNER_TEMP/Tinitch-dmg" \
+            -ov \
+            -format UDZO \
+            "$RUNNER_TEMP/Tinitch-${VERSION}.dmg"
+
+      - name: Install ORAS
+        uses: oras-project/setup-oras@22ce207df3b08e061f537244349aac6ae1d214f6 # v1
+
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ github.token }}" | oras login ghcr.io --username "${{ github.actor }}" --password-stdin
+
+      - name: Publish package
+        env:
+          VERSION: ${{ github.ref_name }}
+          SOURCE_URL: ${{ github.server_url }}/${{ github.repository }}
+        run: |
+          package="ghcr.io/$(printf '%s' "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')"
+          cd "$RUNNER_TEMP"
+          oras push "${package}:${VERSION}" \
+            --artifact-type "application/vnd.tinitch.macos-application" \
+            --annotation "org.opencontainers.image.source=${SOURCE_URL}" \
+            --annotation "org.opencontainers.image.revision=${GITHUB_SHA}" \
+            --annotation "org.opencontainers.image.version=${VERSION}" \
+            "Tinitch-${VERSION}.dmg:application/x-apple-diskimage"
