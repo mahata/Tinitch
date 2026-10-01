@@ -22,12 +22,11 @@ xcodebuild -project Tinitch.xcodeproj -scheme Tinitch build
 xcodebuild -project Tinitch.xcodeproj -scheme Tinitch test
 ```
 
-## Publish to GitHub Packages
+## Release
 
-Push a version tag to build and publish an unsigned macOS disk image to a
-versioned OCI package in GitHub Container Registry. Tags must use OCI-safe
-semantic versions such as `v1.2.3` or `v1.2.3-beta.1`; SemVer build metadata
-containing `+` is not supported:
+Push a version tag to build an unsigned macOS disk image and publish it as a
+GitHub Release. Tags must use semantic versions such as `v1.2.3` or
+`v1.2.3-beta.1`:
 
 ```sh
 git tag v0.1.0
@@ -35,15 +34,16 @@ git push origin v0.1.0
 ```
 
 The workflow runs the tests, archives the Release configuration, creates
-`Tinitch-v0.1.0.dmg`, and publishes it as `ghcr.io/mahata/tinitch:v0.1.0`.
-After authenticating ORAS to `ghcr.io`, pull the package into a directory with:
+`Tinitch-v0.1.0.dmg` with a `.sha256` checksum, and attaches both to the
+release. Download them from the
+[Releases page](https://github.com/mahata/Tinitch/releases) or with:
 
 ```sh
-oras login ghcr.io
-oras pull ghcr.io/mahata/tinitch:v0.1.0 --output tinitch-package
+gh release download v0.1.0 --repo mahata/Tinitch
+shasum -a 256 -c Tinitch-v0.1.0.dmg.sha256
 ```
 
-The package contains an unsigned app, so macOS may require opening it with
+The disk image contains an unsigned app, so macOS may require opening it with
 **Control-click > Open** the first time. Developer ID signing and notarization
 can be added later for public distribution.
 
