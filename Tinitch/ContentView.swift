@@ -96,7 +96,7 @@ struct ContentView: View {
                     .allowsHitTesting(false)
             }
         }
-        .onPasteCommand(of: [UTType.image.identifier], perform: handlePaste)
+        .onPasteCommand(of: [.image], perform: handlePaste)
         .onDisappear(perform: removeTemporaryInput)
         .alert(
             "Image Error",
@@ -135,6 +135,13 @@ struct ContentView: View {
     }
 
     private func loadImage(from inputURL: URL, isTemporary: Bool = false) {
+        guard !isConverting else {
+            if isTemporary {
+                try? FileManager.default.removeItem(at: inputURL)
+            }
+            return
+        }
+
         do {
             let image = try previewLoader.load(from: inputURL)
 
@@ -197,7 +204,7 @@ struct ContentView: View {
     }
 
     private func handleDrop(_ providers: [NSItemProvider]) -> Bool {
-        guard let provider = providers.first else {
+        guard !isConverting, let provider = providers.first else {
             return false
         }
 
@@ -224,7 +231,7 @@ struct ContentView: View {
     }
 
     private func handlePaste(_ providers: [NSItemProvider]) {
-        guard let provider = providers.first else {
+        guard !isConverting, let provider = providers.first else {
             return
         }
 
