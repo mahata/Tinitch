@@ -2,14 +2,17 @@
 
 Tinitch is a native macOS image tool inspired by Skitch.
 
-The first milestone previews and converts JPEG and PNG images to PNG:
+The first milestone previews, annotates, and converts JPEG and PNG images to
+PNG:
 
 1. Click **Choose Image...**, drop an image onto the window, or paste one with
    **Command-V**.
-2. Review the image preview and click **Save as PNG...**. Images that are not
-   JPEG or PNG can still be previewed, but cannot be converted yet.
-3. Choose where to save the output.
-4. Tinitch writes the converted image as a PNG.
+2. The image fills the window next to a tool picker on the left.
+3. Select the **Text** tool and click the image to add overlay letters. Click
+   elsewhere to add another label; empty labels disappear.
+4. Click **Save as PNG...** and choose where to save the output. Images that
+   are not JPEG or PNG can still be previewed, but cannot be converted yet.
+5. Tinitch writes the converted image as a PNG, including any overlay letters.
 
 ## Requirements
 
@@ -50,4 +53,4 @@ The disk image contains an unsigned app, so macOS may require opening it with
 **Control-click > Open** the first time. Developer ID signing and notarization
 can be added later for public distribution.
 
-Annotation, screenshots, resizing, and batch conversion are not included yet.
+Screenshots, resizing, and batch conversion are not included yet.

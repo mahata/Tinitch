@@ -147,6 +147,39 @@ struct ImageConversionServiceTests {
         #expect(!FileManager.default.fileExists(atPath: outputURL.path))
     }
 
+    @Test
+    func writesInMemoryImageAsPNG() throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let outputURL = directory.appendingPathComponent("output.png")
+        let image = makeImage(width: 2, height: 1, pixels: [
+            255, 0, 0, 255,
+            0, 0, 255, 255,
+        ])
+
+        try service.write(image: image, to: outputURL)
+
+        let source = try #require(CGImageSourceCreateWithURL(outputURL as CFURL, nil))
+        #expect(CGImageSourceGetType(source) as String? == UTType.png.identifier)
+
+        let properties = try #require(
+            CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any]
+        )
+        #expect((properties[kCGImagePropertyPixelWidth] as? NSNumber)?.intValue == 2)
+        #expect((properties[kCGImagePropertyPixelHeight] as? NSNumber)?.intValue == 1)
+    }
+
+    @Test
+    func reportsFailureWhenDestinationIsNotWritable() throws {
+        let image = makeImage(width: 1, height: 1, pixels: [255, 0, 0, 255])
+        let outputURL = URL(fileURLWithPath: "/nonexistent-directory/output.png")
+
+        #expect(throws: ImageConversionService.ConversionError.unableToWrite) {
+            try service.write(image: image, to: outputURL)
+        }
+    }
+
     private func temporaryDirectory() throws -> URL {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)

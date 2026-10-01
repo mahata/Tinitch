@@ -14,6 +14,15 @@
 		A10000000000000000000005 /* ImageConversionServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000006 /* ImageConversionServiceTests.swift */; };
 		A10000000000000000000006 /* ImagePreviewLoaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000009 /* ImagePreviewLoaderTests.swift */; };
 		A10000000000000000000007 /* ImagePreviewLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000010 /* ImagePreviewLoader.swift */; };
+		A10000000000000000000008 /* TextAnnotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000011 /* TextAnnotation.swift */; };
+		A10000000000000000000009 /* ImageFit.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000012 /* ImageFit.swift */; };
+		A10000000000000000000010 /* AnnotationRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000013 /* AnnotationRenderer.swift */; };
+		A10000000000000000000011 /* Tool.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000014 /* Tool.swift */; };
+		A10000000000000000000012 /* ImageCanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000015 /* ImageCanvasView.swift */; };
+		A10000000000000000000013 /* ToolPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000016 /* ToolPickerView.swift */; };
+		A10000000000000000000014 /* TextAnnotationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000017 /* TextAnnotationTests.swift */; };
+		A10000000000000000000015 /* ImageFitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000018 /* ImageFitTests.swift */; };
+		A10000000000000000000016 /* AnnotationRendererTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000019 /* AnnotationRendererTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -37,6 +46,15 @@
 		A20000000000000000000008 /* TinitchTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TinitchTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A20000000000000000000009 /* ImagePreviewLoaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePreviewLoaderTests.swift; sourceTree = "<group>"; };
 		A20000000000000000000010 /* ImagePreviewLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePreviewLoader.swift; sourceTree = "<group>"; };
+		A20000000000000000000011 /* TextAnnotation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextAnnotation.swift; sourceTree = "<group>"; };
+		A20000000000000000000012 /* ImageFit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageFit.swift; sourceTree = "<group>"; };
+		A20000000000000000000013 /* AnnotationRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationRenderer.swift; sourceTree = "<group>"; };
+		A20000000000000000000014 /* Tool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tool.swift; sourceTree = "<group>"; };
+		A20000000000000000000015 /* ImageCanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCanvasView.swift; sourceTree = "<group>"; };
+		A20000000000000000000016 /* ToolPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolPickerView.swift; sourceTree = "<group>"; };
+		A20000000000000000000017 /* TextAnnotationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextAnnotationTests.swift; sourceTree = "<group>"; };
+		A20000000000000000000018 /* ImageFitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageFitTests.swift; sourceTree = "<group>"; };
+		A20000000000000000000019 /* AnnotationRendererTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationRendererTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -73,6 +91,12 @@
 				A20000000000000000000002 /* ContentView.swift */,
 				A20000000000000000000003 /* ImageConversionService.swift */,
 				A20000000000000000000010 /* ImagePreviewLoader.swift */,
+				A20000000000000000000011 /* TextAnnotation.swift */,
+				A20000000000000000000012 /* ImageFit.swift */,
+				A20000000000000000000013 /* AnnotationRenderer.swift */,
+				A20000000000000000000014 /* Tool.swift */,
+				A20000000000000000000015 /* ImageCanvasView.swift */,
+				A20000000000000000000016 /* ToolPickerView.swift */,
 				A20000000000000000000004 /* Assets.xcassets */,
 				A20000000000000000000005 /* Tinitch.entitlements */,
 			);
@@ -84,6 +108,9 @@
 			children = (
 				A20000000000000000000006 /* ImageConversionServiceTests.swift */,
 				A20000000000000000000009 /* ImagePreviewLoaderTests.swift */,
+				A20000000000000000000017 /* TextAnnotationTests.swift */,
+				A20000000000000000000018 /* ImageFitTests.swift */,
+				A20000000000000000000019 /* AnnotationRendererTests.swift */,
 			);
 			path = TinitchTests;
 			sourceTree = "<group>";
@@ -200,6 +227,12 @@
 				A10000000000000000000002 /* ContentView.swift in Sources */,
 				A10000000000000000000003 /* ImageConversionService.swift in Sources */,
 				A10000000000000000000007 /* ImagePreviewLoader.swift in Sources */,
+				A10000000000000000000008 /* TextAnnotation.swift in Sources */,
+				A10000000000000000000009 /* ImageFit.swift in Sources */,
+				A10000000000000000000010 /* AnnotationRenderer.swift in Sources */,
+				A10000000000000000000011 /* Tool.swift in Sources */,
+				A10000000000000000000012 /* ImageCanvasView.swift in Sources */,
+				A10000000000000000000013 /* ToolPickerView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -209,6 +242,9 @@
 			files = (
 				A10000000000000000000005 /* ImageConversionServiceTests.swift in Sources */,
 				A10000000000000000000006 /* ImagePreviewLoaderTests.swift in Sources */,
+				A10000000000000000000014 /* TextAnnotationTests.swift in Sources */,
+				A10000000000000000000015 /* ImageFitTests.swift in Sources */,
+				A10000000000000000000016 /* AnnotationRendererTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

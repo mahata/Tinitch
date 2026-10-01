@@ -33,6 +33,16 @@ struct ImageConversionService: Sendable {
         }.value
     }
 
+    func write(image: CGImage, to outputURL: URL) throws {
+        let encodedData = try Self.encodePNG(image)
+
+        do {
+            try encodedData.write(to: outputURL, options: .atomic)
+        } catch {
+            throw ConversionError.unableToWrite
+        }
+    }
+
     func validate(inputURL: URL) throws {
         guard let source = CGImageSourceCreateWithURL(inputURL as CFURL, nil),
               let sourceType = CGImageSourceGetType(source)
@@ -78,6 +88,16 @@ struct ImageConversionService: Sendable {
             throw ConversionError.unableToDecode
         }
 
+        let encodedData = try Self.encodePNG(image)
+
+        do {
+            try encodedData.write(to: outputURL, options: .atomic)
+        } catch {
+            throw ConversionError.unableToWrite
+        }
+    }
+
+    private static func encodePNG(_ image: CGImage) throws -> Data {
         let encodedData = NSMutableData()
         guard let destination = CGImageDestinationCreateWithData(
             encodedData,
@@ -93,11 +113,7 @@ struct ImageConversionService: Sendable {
             throw ConversionError.unableToEncode
         }
 
-        do {
-            try (encodedData as Data).write(to: outputURL, options: .atomic)
-        } catch {
-            throw ConversionError.unableToWrite
-        }
+        return encodedData as Data
     }
 
     private static let allowedTypes = [
