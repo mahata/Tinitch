@@ -33,6 +33,27 @@ struct ImageCanvasView: View {
                         )
                 }
 
+                ForEach($annotations) { $annotation in
+                    TextField("Text", text: $annotation.text, axis: .vertical)
+                        .textFieldStyle(.plain)
+                        .font(
+                            .system(
+                                size: TextAnnotation.fontSize(forHeight: imageRect.height),
+                                weight: .bold
+                            )
+                        )
+                        .foregroundStyle(.white)
+                        .shadow(radius: TextAnnotation.fontSize(forHeight: imageRect.height) / 6)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(1...)
+                        .fixedSize(horizontal: true, vertical: true)
+                        .focused($focusedAnnotationID, equals: annotation.id)
+                        .position(
+                            x: imageRect.minX + annotation.normalizedPosition.x * imageRect.width,
+                            y: imageRect.minY + annotation.normalizedPosition.y * imageRect.height
+                        )
+                }
+
                 if selectedTool == .mosaic {
                     Color.clear
                         .contentShape(Rectangle())
@@ -53,27 +74,6 @@ struct ImageCanvasView: View {
                             .position(x: draftMosaicRect.midX, y: draftMosaicRect.midY)
                             .allowsHitTesting(false)
                     }
-                }
-
-                ForEach($annotations) { $annotation in
-                    TextField("Text", text: $annotation.text, axis: .vertical)
-                        .textFieldStyle(.plain)
-                        .font(
-                            .system(
-                                size: TextAnnotation.fontSize(forHeight: imageRect.height),
-                                weight: .bold
-                            )
-                        )
-                        .foregroundStyle(.white)
-                        .shadow(radius: TextAnnotation.fontSize(forHeight: imageRect.height) / 6)
-                        .multilineTextAlignment(.center)
-                        .lineLimit(1...)
-                        .fixedSize(horizontal: true, vertical: true)
-                        .focused($focusedAnnotationID, equals: annotation.id)
-                        .position(
-                            x: imageRect.minX + annotation.normalizedPosition.x * imageRect.width,
-                            y: imageRect.minY + annotation.normalizedPosition.y * imageRect.height
-                        )
                 }
 
                 if selectedTool == .text {
@@ -122,7 +122,10 @@ struct ImageCanvasView: View {
     }
 
     private func updateDraftMosaic(with value: DragGesture.Value, in imageRect: CGRect) {
-        guard imageRect.width > 0, imageRect.height > 0 else {
+        guard imageRect.width > 0,
+              imageRect.height > 0,
+              imageRect.contains(value.startLocation)
+        else {
             return
         }
 
@@ -144,7 +147,10 @@ struct ImageCanvasView: View {
             draftMosaicRect = nil
         }
 
-        guard imageRect.width > 0, imageRect.height > 0 else {
+        guard imageRect.width > 0,
+              imageRect.height > 0,
+              imageRect.contains(value.startLocation)
+        else {
             return
         }
 
