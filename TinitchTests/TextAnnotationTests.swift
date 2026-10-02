@@ -51,4 +51,13 @@ struct TextAnnotationTests {
         #expect(large == small * 4)
         #expect(TextAnnotation.fontSize(forHeight: 0) == 1)
     }
+
+    @Test
+    func recognizesOnlyVisibleText() {
+        let position = CGPoint(x: 0.5, y: 0.5)
+
+        #expect(!TextAnnotation(text: "", normalizedPosition: position).hasVisibleText)
+        #expect(!TextAnnotation(text: " \n\t", normalizedPosition: position).hasVisibleText)
+        #expect(TextAnnotation(text: "\nHi", normalizedPosition: position).hasVisibleText)
+    }
 }

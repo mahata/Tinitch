@@ -223,7 +223,7 @@ struct ContentView: View {
 
         Task {
             do {
-                let annotatedAnnotations = annotations.filter { !$0.text.isEmpty }
+                let annotatedAnnotations = annotations.filter(\.hasVisibleText)
                 if annotatedAnnotations.isEmpty {
                     try await conversionService.convert(inputURL: inputURL, outputURL: destinationURL)
                 } else if let previewImage {

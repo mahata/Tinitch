@@ -92,6 +92,6 @@ struct ImageCanvasView: View {
             return
         }
 
-        annotations.removeAll { $0.id == annotationID && $0.text.isEmpty }
+        annotations.removeAll { $0.id == annotationID && !$0.hasVisibleText }
     }
 }

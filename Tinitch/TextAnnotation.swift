@@ -8,6 +8,10 @@ struct TextAnnotation: Identifiable, Equatable {
     var text: String
     var normalizedPosition: CGPoint
 
+    var hasVisibleText: Bool {
+        text.contains { !$0.isWhitespace }
+    }
+
     init(id: UUID = UUID(), text: String = "", normalizedPosition: CGPoint) {
         self.id = id
         self.text = text

@@ -95,7 +95,7 @@ struct AnnotationRendererTests {
         let rendered = try renderer.render(
             sourceImage: source,
             annotations: [
-                TextAnnotation(text: "", normalizedPosition: CGPoint(x: 0.5, y: 0.5))
+                TextAnnotation(text: " \n\t", normalizedPosition: CGPoint(x: 0.5, y: 0.5))
             ]
         )
 

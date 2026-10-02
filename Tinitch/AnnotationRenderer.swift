@@ -31,7 +31,7 @@ struct AnnotationRenderer {
         NSGraphicsContext.current = NSGraphicsContext(cgContext: context, flipped: false)
 
         let attributes = Self.textAttributes(forHeight: imageSize.height)
-        for annotation in annotations where !annotation.text.isEmpty {
+        for annotation in annotations where annotation.hasVisibleText {
             let attributedText = NSAttributedString(string: annotation.text, attributes: attributes)
             let textBounds = attributedText.boundingRect(
                 with: CGSize(
