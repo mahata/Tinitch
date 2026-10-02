@@ -37,12 +37,17 @@ jobs:
         run: |
           set -euo pipefail
 
+          # Leading zeroes are invalid SemVer and would also make bash evaluate
+          # $((PATCH + 1)) as octal, so such tags are ignored.
+          first_release_tag() {
+            awk '/^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/ && !found { print; found=1 }'
+          }
+
           while true; do
             git fetch --force --tags origin
 
             EXISTING_TAG="$(
-              git tag --points-at "$RELEASE_SHA" --sort=-version:refname |
-                awk '/^v[0-9]+\.[0-9]+\.[0-9]+$/ && !found { print; found=1 }'
+              git tag --points-at "$RELEASE_SHA" --sort=-version:refname | first_release_tag
             )"
 
             if [[ -n "$EXISTING_TAG" ]]; then
@@ -70,8 +75,7 @@ jobs:
             fi
 
             LATEST_TAG="$(
-              git tag --list 'v*' --sort=-version:refname |
-                awk '/^v[0-9]+\.[0-9]+\.[0-9]+$/ && !found { print; found=1 }'
+              git tag --list 'v*' --sort=-version:refname | first_release_tag
             )"
 
             if [[ -z "$LATEST_TAG" ]]; then
