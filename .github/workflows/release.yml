@@ -1,46 +1,114 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
 
 permissions:
   contents: write
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-${{ github.event.workflow_run.head_sha }}
   cancel-in-progress: false
 
 jobs:
   release:
     name: Package and publish release
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main'
     runs-on: macos-15
     timeout-minutes: 30
     steps:
-      - name: Validate version tag
-        env:
-          VERSION: ${{ github.ref_name }}
-        run: |
-          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z]+([.-][0-9A-Za-z]+)*)?$ ]]; then
-            echo "Version tag must be SemVer, for example v1.2.3 or v1.2.3-beta.1." >&2
-            exit 1
-          fi
-
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
 
-      - name: Run tests
+      - name: Reserve patch version
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
-          xcodebuild test \
-            -project Tinitch.xcodeproj \
-            -scheme Tinitch \
-            -destination 'platform=macOS' \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY=""
+          set -euo pipefail
+
+          while true; do
+            git fetch --force --tags origin
+
+            EXISTING_TAG="$(
+              git tag --points-at "$RELEASE_SHA" --sort=-version:refname |
+                awk '/^v[0-9]+\.[0-9]+\.[0-9]+$/ && !found { print; found=1 }'
+            )"
+
+            if [[ -n "$EXISTING_TAG" ]]; then
+              if RELEASE_DETAILS="$(
+                gh release view "$EXISTING_TAG" --json isDraft,assets 2>/dev/null
+              )"; then
+                VERSION="${EXISTING_TAG#v}"
+                if jq -e \
+                  --arg dmg "Tinitch-$VERSION.dmg" \
+                  --arg checksum "Tinitch-$VERSION.dmg.sha256" \
+                  '.isDraft == false
+                    and ([.assets[].name] | index($dmg)) != null
+                    and ([.assets[].name] | index($checksum)) != null' \
+                  <<< "$RELEASE_DETAILS" >/dev/null; then
+                  echo "Commit $RELEASE_SHA was already released as $EXISTING_TAG."
+                  echo "should_release=false" >> "$GITHUB_OUTPUT"
+                  exit 0
+                fi
+
+                echo "Release $EXISTING_TAG is incomplete or still a draft; rebuilding it."
+              fi
+
+              RELEASE_TAG="$EXISTING_TAG"
+              break
+            fi
+
+            LATEST_TAG="$(
+              git tag --list 'v*' --sort=-version:refname |
+                awk '/^v[0-9]+\.[0-9]+\.[0-9]+$/ && !found { print; found=1 }'
+            )"
+
+            if [[ -z "$LATEST_TAG" ]]; then
+              RELEASE_TAG="v0.1.0"
+            else
+              IFS=. read -r MAJOR MINOR PATCH <<< "${LATEST_TAG#v}"
+              RELEASE_TAG="v$MAJOR.$MINOR.$((PATCH + 1))"
+            fi
+
+            git tag "$RELEASE_TAG" "$RELEASE_SHA"
+            if git push origin "refs/tags/$RELEASE_TAG"; then
+              break
+            fi
+
+            git tag -d "$RELEASE_TAG"
+            if git ls-remote --exit-code --tags origin "refs/tags/$RELEASE_TAG" >/dev/null; then
+              echo "Version $RELEASE_TAG was reserved concurrently; retrying."
+              sleep 2
+              continue
+            fi
+
+            echo "Failed to reserve $RELEASE_TAG and no matching remote tag exists." >&2
+            exit 1
+          done
+
+          echo "Reserved $RELEASE_TAG for $RELEASE_SHA."
+          {
+            echo "should_release=true"
+            echo "tag=$RELEASE_TAG"
+            echo "number=${RELEASE_TAG#v}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Archive app
+        if: steps.version.outputs.should_release == 'true'
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+          VERSION: ${{ steps.version.outputs.number }}
         run: |
           xcodebuild archive \
             -project Tinitch.xcodeproj \
@@ -48,13 +116,30 @@ jobs:
             -configuration Release \
             -destination 'generic/platform=macOS' \
             -archivePath "$RUNNER_TEMP/Tinitch.xcarchive" \
+            MARKETING_VERSION="$VERSION" \
+            CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY=""
 
-      - name: Create disk image
+      - name: Verify app version
+        if: steps.version.outputs.should_release == 'true'
         env:
-          VERSION: ${{ github.ref_name }}
+          BUILD_NUMBER: ${{ github.run_number }}
+          VERSION: ${{ steps.version.outputs.number }}
+        run: |
+          INFO_PLIST="$RUNNER_TEMP/Tinitch.xcarchive/Products/Applications/Tinitch.app/Contents/Info.plist"
+          ACTUAL_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$INFO_PLIST")"
+          ACTUAL_BUILD="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$INFO_PLIST")"
+          if [[ "$ACTUAL_VERSION" != "$VERSION" || "$ACTUAL_BUILD" != "$BUILD_NUMBER" ]]; then
+            echo "Expected Tinitch $VERSION ($BUILD_NUMBER), but the archive contains $ACTUAL_VERSION ($ACTUAL_BUILD)." >&2
+            exit 1
+          fi
+
+      - name: Create disk image
+        if: steps.version.outputs.should_release == 'true'
+        env:
+          VERSION: ${{ steps.version.outputs.number }}
         run: |
           mkdir -p artifacts "$RUNNER_TEMP/Tinitch-dmg"
           ditto "$RUNNER_TEMP/Tinitch.xcarchive/Products/Applications/Tinitch.app" \
@@ -69,18 +154,20 @@ jobs:
           shasum -a 256 "Tinitch-${VERSION}.dmg" > "Tinitch-${VERSION}.dmg.sha256"
 
       - name: Publish GitHub Release
+        if: steps.version.outputs.should_release == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.number }}
         run: |
-          if gh release view "$VERSION" >/dev/null 2>&1; then
-            gh release upload "$VERSION" \
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" \
               "artifacts/Tinitch-${VERSION}.dmg" \
               "artifacts/Tinitch-${VERSION}.dmg.sha256" \
               --clobber
-            gh release edit "$VERSION" --draft=false
+            gh release edit "$RELEASE_TAG" --draft=false
           else
-            gh release create "$VERSION" \
+            gh release create "$RELEASE_TAG" \
               "artifacts/Tinitch-${VERSION}.dmg" \
               "artifacts/Tinitch-${VERSION}.dmg.sha256" \
               --verify-tag \
