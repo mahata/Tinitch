@@ -11,9 +11,13 @@ PNG:
 3. Select the **Text** tool and click the image to add overlay letters. Press
    **Return** to add a line within the label. Click elsewhere or use **Add
    Text** to add another label; empty labels disappear.
-4. Click **Save as PNG...** and choose where to save the output. Images that
+4. Select the **Mosaic** tool and drag across the image to pixelate an area.
+   The preview updates as soon as the drag ends. Click inside a mosaic to
+   remove it.
+5. Click **Save as PNG...** and choose where to save the output. Images that
    are not JPEG or PNG can still be previewed, but cannot be converted yet.
-5. Tinitch writes the converted image as a PNG, including any overlay letters.
+6. Tinitch writes the converted image as a PNG, including any mosaics and
+   overlay letters. Mosaics are applied first, so labels stay sharp.
 
 ## Requirements
 
