@@ -28,6 +28,18 @@ xcodebuild -project Tinitch.xcodeproj -scheme Tinitch build
 xcodebuild -project Tinitch.xcodeproj -scheme Tinitch test
 ```
 
+## App icon
+
+The icon is generated from code rather than checked in by hand. Regenerate it
+after editing `Tools/GenerateAppIcon.swift`:
+
+```sh
+swift Tools/GenerateAppIcon.swift Tinitch/Assets.xcassets/AppIcon.appiconset
+```
+
+The script renders every size the macOS asset catalog needs and rewrites the
+set's `Contents.json`.
+
 ## Release
 
 Every successful CI run caused by a push to `main` builds an unsigned macOS
