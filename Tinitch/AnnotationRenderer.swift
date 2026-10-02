@@ -33,13 +33,26 @@ struct AnnotationRenderer {
         let attributes = Self.textAttributes(forHeight: imageSize.height)
         for annotation in annotations where !annotation.text.isEmpty {
             let attributedText = NSAttributedString(string: annotation.text, attributes: attributes)
-            let textSize = attributedText.size()
+            let textBounds = attributedText.boundingRect(
+                with: CGSize(
+                    width: CGFloat.greatestFiniteMagnitude,
+                    height: CGFloat.greatestFiniteMagnitude
+                ),
+                options: [.usesLineFragmentOrigin, .usesFontLeading]
+            )
+            let textSize = CGSize(
+                width: ceil(textBounds.width),
+                height: ceil(textBounds.height)
+            )
             let center = annotation.point(in: imageSize)
             attributedText.draw(
-                at: CGPoint(
+                with: CGRect(
                     x: center.x - textSize.width / 2,
-                    y: imageSize.height - center.y - textSize.height / 2
-                )
+                    y: imageSize.height - center.y - textSize.height / 2,
+                    width: textSize.width,
+                    height: textSize.height
+                ),
+                options: [.usesLineFragmentOrigin, .usesFontLeading]
             )
         }
 
@@ -59,9 +72,13 @@ struct AnnotationRenderer {
         shadow.shadowBlurRadius = fontSize / 6
         shadow.shadowOffset = CGSize(width: 0, height: -fontSize / 16)
 
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = .center
+
         return [
             .font: NSFont.systemFont(ofSize: fontSize, weight: .bold),
             .foregroundColor: NSColor.white,
+            .paragraphStyle: paragraphStyle,
             .shadow: shadow,
         ]
     }

@@ -8,8 +8,9 @@ PNG:
 1. Click **Choose Image...**, drop an image onto the window, or paste one with
    **Command-V**.
 2. The image fills the window next to a tool picker on the left.
-3. Select the **Text** tool and click the image to add overlay letters. Click
-   elsewhere to add another label; empty labels disappear.
+3. Select the **Text** tool and click the image to add overlay letters. Press
+   **Return** to add a line within the label. Click elsewhere or use **Add
+   Text** to add another label; empty labels disappear.
 4. Click **Save as PNG...** and choose where to save the output. Images that
    are not JPEG or PNG can still be previewed, but cannot be converted yet.
 5. Tinitch writes the converted image as a PNG, including any overlay letters.

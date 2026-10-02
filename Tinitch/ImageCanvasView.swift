@@ -30,7 +30,7 @@ struct ImageCanvasView: View {
                     .allowsHitTesting(isTextToolActive)
 
                 ForEach($annotations) { $annotation in
-                    TextField("Text", text: $annotation.text)
+                    TextField("Text", text: $annotation.text, axis: .vertical)
                         .textFieldStyle(.plain)
                         .font(
                             .system(
@@ -41,7 +41,8 @@ struct ImageCanvasView: View {
                         .foregroundStyle(.white)
                         .shadow(radius: TextAnnotation.fontSize(forHeight: imageRect.height) / 6)
                         .multilineTextAlignment(.center)
-                        .fixedSize()
+                        .lineLimit(1...)
+                        .fixedSize(horizontal: true, vertical: true)
                         .focused($focusedAnnotationID, equals: annotation.id)
                         .position(
                             x: imageRect.minX + annotation.normalizedPosition.x * imageRect.width,

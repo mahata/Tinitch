@@ -37,6 +37,49 @@ struct AnnotationRendererTests {
     }
 
     @Test
+    func drawsEveryAnnotationOntoImage() throws {
+        let source = try whiteImage(width: 240, height: 120)
+        let singleAnnotation = TextAnnotation(
+            text: "Hi",
+            normalizedPosition: CGPoint(x: 0.25, y: 0.5)
+        )
+
+        let single = try renderer.render(
+            sourceImage: source,
+            annotations: [singleAnnotation]
+        )
+        let multiple = try renderer.render(
+            sourceImage: source,
+            annotations: [
+                singleAnnotation,
+                TextAnnotation(text: "Hi", normalizedPosition: CGPoint(x: 0.75, y: 0.5)),
+            ]
+        )
+
+        #expect(try nonWhitePixelCount(in: multiple) > nonWhitePixelCount(in: single))
+    }
+
+    @Test
+    func drawsEveryLineOfMultilineAnnotation() throws {
+        let source = try whiteImage(width: 240, height: 160)
+
+        let singleLine = try renderer.render(
+            sourceImage: source,
+            annotations: [
+                TextAnnotation(text: "Hi", normalizedPosition: CGPoint(x: 0.5, y: 0.5))
+            ]
+        )
+        let multipleLines = try renderer.render(
+            sourceImage: source,
+            annotations: [
+                TextAnnotation(text: "Hi\nHi", normalizedPosition: CGPoint(x: 0.5, y: 0.5))
+            ]
+        )
+
+        #expect(try nonWhitePixelCount(in: multipleLines) > nonWhitePixelCount(in: singleLine))
+    }
+
+    @Test
     func leavesImageUntouchedWithoutAnnotations() throws {
         let source = try whiteImage(width: 120, height: 80)
 
