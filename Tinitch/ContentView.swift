@@ -10,79 +10,22 @@ struct ContentView: View {
     @State private var outputURL: URL?
     @State private var errorMessage: String?
     @State private var isDropTargeted = false
+    @State private var selectedTool: Tool?
+    @State private var annotations: [TextAnnotation] = []
 
     private let conversionService = ImageConversionService()
     private let previewLoader = ImagePreviewLoader()
+    private let annotationRenderer = AnnotationRenderer()
 
     var body: some View {
-        VStack(spacing: 24) {
+        Group {
             if let previewImage {
-                Image(nsImage: previewImage)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(maxWidth: 420, maxHeight: 220)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .shadow(radius: 8)
+                editor(for: previewImage)
             } else {
-                Image(systemName: "photo.badge.arrow.down")
-                    .font(.system(size: 56))
-                    .foregroundStyle(.tint)
-            }
-
-            VStack(spacing: 8) {
-                Text(previewImage == nil ? "Convert an image to PNG" : "Image preview")
-                    .font(.title2.bold())
-
-                Text(
-                    previewImage == nil
-                        ? "Choose, drop, or paste an image."
-                        : "JPEG and PNG images can be saved as PNG."
-                )
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-
-            if isConverting {
-                ProgressView("Converting...")
-                    .controlSize(.small)
-            } else if previewImage != nil {
-                HStack(spacing: 12) {
-                    Button("Choose Another...") {
-                        chooseImage()
-                    }
-                    .buttonStyle(.bordered)
-
-                    Button("Save as PNG...") {
-                        savePreviewedImage()
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .keyboardShortcut(.defaultAction)
-                }
-            } else {
-                Button("Choose Image...") {
-                    chooseImage()
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .keyboardShortcut(.defaultAction)
-            }
-
-            Text("Drop an image here or press ⌘V to paste.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            if let outputURL {
-                Label {
-                    Text("Saved \(outputURL.lastPathComponent)")
-                } icon: {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
-                }
-                .font(.callout)
+                emptyState
             }
         }
-        .frame(width: 520, height: 420)
-        .padding(32)
+        .frame(minWidth: 640, minHeight: 480)
         .onDrop(
             of: [UTType.fileURL.identifier, UTType.image.identifier],
             isTargeted: $isDropTargeted,
@@ -113,6 +56,92 @@ struct ContentView: View {
         } message: {
             Text(errorMessage ?? "The image could not be converted.")
         }
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: 24) {
+            Image(systemName: "photo.badge.arrow.down")
+                .font(.system(size: 56))
+                .foregroundStyle(.tint)
+
+            VStack(spacing: 8) {
+                Text("Convert an image to PNG")
+                    .font(.title2.bold())
+
+                Text("Choose, drop, or paste an image.")
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+
+            Button("Choose Image...") {
+                chooseImage()
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .keyboardShortcut(.defaultAction)
+
+            Text("Drop an image here or press ⌘V to paste.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(32)
+    }
+
+    private func editor(for image: NSImage) -> some View {
+        HStack(spacing: 0) {
+            sidebar
+            Divider()
+            ImageCanvasView(
+                image: image,
+                annotations: $annotations,
+                isTextToolActive: selectedTool == .text
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+
+    private var sidebar: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            ToolPickerView(selectedTool: $selectedTool)
+
+            Spacer()
+
+            if isConverting {
+                ProgressView("Converting...")
+                    .controlSize(.small)
+            }
+
+            if let outputURL {
+                Label {
+                    Text("Saved \(outputURL.lastPathComponent)")
+                        .lineLimit(2)
+                } icon: {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
+                }
+                .font(.caption)
+            }
+
+            VStack(spacing: 8) {
+                Button("Choose Another...") {
+                    chooseImage()
+                }
+                .buttonStyle(.bordered)
+                .frame(maxWidth: .infinity)
+
+                Button("Save as PNG...") {
+                    savePreviewedImage()
+                }
+                .buttonStyle(.borderedProminent)
+                .frame(maxWidth: .infinity)
+                .keyboardShortcut(.defaultAction)
+            }
+            .disabled(isConverting)
+        }
+        .padding(16)
+        .frame(width: 200)
+        .background(.bar)
     }
 
     private func chooseImage() {
@@ -149,6 +178,7 @@ struct ContentView: View {
             self.inputURL = inputURL
             previewImage = image
             temporaryInputURL = isTemporary ? inputURL : nil
+            annotations = []
             outputURL = nil
             errorMessage = nil
         } catch {
@@ -193,7 +223,19 @@ struct ContentView: View {
 
         Task {
             do {
-                try await conversionService.convert(inputURL: inputURL, outputURL: destinationURL)
+                let annotatedAnnotations = annotations.filter { !$0.text.isEmpty }
+                if annotatedAnnotations.isEmpty {
+                    try await conversionService.convert(inputURL: inputURL, outputURL: destinationURL)
+                } else if let previewImage {
+                    let renderedImage = try annotationRenderer.render(
+                        image: previewImage,
+                        annotations: annotatedAnnotations
+                    )
+                    try await conversionService.write(image: renderedImage, to: destinationURL)
+                } else {
+                    throw ImageConversionService.ConversionError.unableToDecode
+                }
+
                 self.outputURL = destinationURL
             } catch {
                 errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
