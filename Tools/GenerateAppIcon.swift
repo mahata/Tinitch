@@ -4,8 +4,8 @@
 //
 //     swift Tools/GenerateAppIcon.swift Tinitch/Assets.xcassets/AppIcon.appiconset
 //
-// The artwork is a blue squircle holding a tilted photo card with an annotation
-// arrow sweeping across it, mirroring what the app does: mark up images.
+// The artwork is a blue squircle holding a tilted photo card with a tapered
+// annotation arrow across it, mirroring what the app does: mark up images.
 
 import AppKit
 import CoreGraphics
@@ -59,34 +59,51 @@ func fill(_ context: CGContext, path: CGPath, gradient: CGGradient, from: CGPoin
 
 // MARK: - Arrow geometry
 
-let arrowStart = CGPoint(x: 258, y: 318)
-let arrowControl1 = CGPoint(x: 420, y: 214)
-let arrowControl2 = CGPoint(x: 566, y: 408)
-let arrowEnd = CGPoint(x: 742, y: 648)
-let arrowWidth: CGFloat = 62
-let headLength: CGFloat = 132
-let headHalfWidth: CGFloat = 104
+let arrowStart = CGPoint(x: 244, y: 298)
+let arrowEnd = CGPoint(x: 790, y: 686)
+let headLength: CGFloat = 154
+let headHalfWidth: CGFloat = 108
+let rootHalfWidth: CGFloat = 9
+let neckHalfWidth: CGFloat = 42
 
-func arrowPaths() -> (shaft: CGPath, head: CGPath) {
-    let tangent = CGVector(dx: arrowEnd.x - arrowControl2.x, dy: arrowEnd.y - arrowControl2.y)
-    let length = sqrt(tangent.dx * tangent.dx + tangent.dy * tangent.dy)
-    let unit = CGVector(dx: tangent.dx / length, dy: tangent.dy / length)
+func arrowPath() -> CGPath {
+    let direction = CGVector(dx: arrowEnd.x - arrowStart.x, dy: arrowEnd.y - arrowStart.y)
+    let length = sqrt(direction.dx * direction.dx + direction.dy * direction.dy)
+    let unit = CGVector(dx: direction.dx / length, dy: direction.dy / length)
     let normal = CGVector(dx: -unit.dy, dy: unit.dx)
+    let headBase = CGPoint(
+        x: arrowEnd.x - unit.dx * headLength,
+        y: arrowEnd.y - unit.dy * headLength
+    )
 
-    let shaft = CGMutablePath()
-    shaft.move(to: arrowStart)
-    shaft.addCurve(to: arrowEnd, control1: arrowControl1, control2: arrowControl2)
-    let stroked = shaft.copy(strokingWithWidth: arrowWidth, lineCap: .round, lineJoin: .round, miterLimit: 10)
-
-    let base = CGPoint(x: arrowEnd.x - unit.dx * 18, y: arrowEnd.y - unit.dy * 18)
-    let tip = CGPoint(x: base.x + unit.dx * headLength, y: base.y + unit.dy * headLength)
-    let head = CGMutablePath()
-    head.move(to: tip)
-    head.addLine(to: CGPoint(x: base.x + normal.dx * headHalfWidth, y: base.y + normal.dy * headHalfWidth))
-    head.addLine(to: CGPoint(x: base.x - normal.dx * headHalfWidth, y: base.y - normal.dy * headHalfWidth))
-    head.closeSubpath()
-
-    return (stroked, head)
+    let path = CGMutablePath()
+    path.move(to: CGPoint(
+        x: arrowStart.x + normal.dx * rootHalfWidth,
+        y: arrowStart.y + normal.dy * rootHalfWidth
+    ))
+    path.addLine(to: CGPoint(
+        x: headBase.x + normal.dx * neckHalfWidth,
+        y: headBase.y + normal.dy * neckHalfWidth
+    ))
+    path.addLine(to: CGPoint(
+        x: headBase.x + normal.dx * headHalfWidth,
+        y: headBase.y + normal.dy * headHalfWidth
+    ))
+    path.addLine(to: arrowEnd)
+    path.addLine(to: CGPoint(
+        x: headBase.x - normal.dx * headHalfWidth,
+        y: headBase.y - normal.dy * headHalfWidth
+    ))
+    path.addLine(to: CGPoint(
+        x: headBase.x - normal.dx * neckHalfWidth,
+        y: headBase.y - normal.dy * neckHalfWidth
+    ))
+    path.addLine(to: CGPoint(
+        x: arrowStart.x - normal.dx * rootHalfWidth,
+        y: arrowStart.y - normal.dy * rootHalfWidth
+    ))
+    path.closeSubpath()
+    return path
 }
 
 // MARK: - Drawing
@@ -175,25 +192,22 @@ func drawIcon(in context: CGContext) {
     context.restoreGState()
 
     // Annotation arrow with a white keyline so it reads over the card.
-    let (shaft, head) = arrowPaths()
+    let arrow = arrowPath()
     let keylineWidth: CGFloat = 30
 
     context.saveGState()
     context.setShadow(offset: CGSize(width: 0, height: -12), blur: 26, color: rgb(0x2A0A14, 0.38))
-    context.beginTransparencyLayer(auxiliaryInfo: nil)
+    context.addPath(arrow)
+    context.setLineJoin(.round)
+    context.setLineCap(.round)
+    context.setLineWidth(keylineWidth)
     context.setFillColor(rgb(0xFFFFFF))
-    for path in [shaft, head] {
-        context.addPath(path.copy(strokingWithWidth: keylineWidth, lineCap: .round, lineJoin: .round, miterLimit: 10))
-        context.addPath(path)
-        context.fillPath()
-    }
-    context.endTransparencyLayer()
+    context.setStrokeColor(rgb(0xFFFFFF))
+    context.drawPath(using: .fillStroke)
     context.restoreGState()
 
     let arrowGradient = linearGradient([rgb(0xFF9A3D), rgb(0xFF5C5C), rgb(0xF0356F)], [0, 0.55, 1])
-    for path in [shaft, head] {
-        fill(context, path: path, gradient: arrowGradient, from: arrowStart, to: arrowEnd)
-    }
+    fill(context, path: arrow, gradient: arrowGradient, from: arrowStart, to: arrowEnd)
 }
 
 func renderIcon(size: CGFloat) -> CGImage {
