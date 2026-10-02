@@ -33,7 +33,13 @@ struct ImageConversionService: Sendable {
         }.value
     }
 
-    func write(image: CGImage, to outputURL: URL) throws {
+    func write(image: CGImage, to outputURL: URL) async throws {
+        try await Task.detached(priority: .userInitiated) {
+            try Self.writeSynchronously(image: image, to: outputURL)
+        }.value
+    }
+
+    private static func writeSynchronously(image: CGImage, to outputURL: URL) throws {
         let encodedData = try Self.encodePNG(image)
 
         do {

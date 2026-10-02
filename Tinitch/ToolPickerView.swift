@@ -24,6 +24,7 @@ struct ToolPickerView: View {
                         .contentShape(RoundedRectangle(cornerRadius: 8))
                 }
                 .buttonStyle(.plain)
+                .accessibilityAddTraits(selectedTool == tool ? .isSelected : [])
                 .help(tool.hint)
             }
 

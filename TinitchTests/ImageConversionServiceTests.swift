@@ -148,7 +148,7 @@ struct ImageConversionServiceTests {
     }
 
     @Test
-    func writesInMemoryImageAsPNG() throws {
+    func writesInMemoryImageAsPNG() async throws {
         let directory = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
 
@@ -158,7 +158,7 @@ struct ImageConversionServiceTests {
             0, 0, 255, 255,
         ])
 
-        try service.write(image: image, to: outputURL)
+        try await service.write(image: image, to: outputURL)
 
         let source = try #require(CGImageSourceCreateWithURL(outputURL as CFURL, nil))
         #expect(CGImageSourceGetType(source) as String? == UTType.png.identifier)
@@ -171,12 +171,12 @@ struct ImageConversionServiceTests {
     }
 
     @Test
-    func reportsFailureWhenDestinationIsNotWritable() throws {
+    func reportsFailureWhenDestinationIsNotWritable() async throws {
         let image = makeImage(width: 1, height: 1, pixels: [255, 0, 0, 255])
         let outputURL = URL(fileURLWithPath: "/nonexistent-directory/output.png")
 
-        #expect(throws: ImageConversionService.ConversionError.unableToWrite) {
-            try service.write(image: image, to: outputURL)
+        await #expect(throws: ImageConversionService.ConversionError.unableToWrite) {
+            try await service.write(image: image, to: outputURL)
         }
     }
 

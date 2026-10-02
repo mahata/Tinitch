@@ -231,7 +231,7 @@ struct ContentView: View {
                         image: previewImage,
                         annotations: annotatedAnnotations
                     )
-                    try conversionService.write(image: renderedImage, to: destinationURL)
+                    try await conversionService.write(image: renderedImage, to: destinationURL)
                 } else {
                     throw ImageConversionService.ConversionError.unableToDecode
                 }

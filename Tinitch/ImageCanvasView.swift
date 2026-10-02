@@ -48,6 +48,21 @@ struct ImageCanvasView: View {
                             y: imageRect.minY + annotation.normalizedPosition.y * imageRect.height
                         )
                 }
+
+                if isTextToolActive {
+                    Button("Add Text", systemImage: "plus") {
+                        addAnnotation(
+                            at: CGPoint(x: imageRect.midX, y: imageRect.midY),
+                            in: imageRect
+                        )
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .keyboardShortcut("t", modifiers: [.command, .shift])
+                    .position(
+                        x: imageRect.maxX - 62,
+                        y: imageRect.maxY - 24
+                    )
+                }
             }
             .onChange(of: focusedAnnotationID) { previousID, _ in
                 discardEmptyAnnotation(previousID)
