@@ -25,6 +25,12 @@ struct ImageCanvasView: View {
     var body: some View {
         GeometryReader { proxy in
             let imageRect = ImageFit.rect(for: image.size, in: proxy.size)
+            let sourcePixelSize = image.cgImage(forProposedRect: nil, context: nil, hints: nil)
+                .map { CGSize(width: $0.width, height: $0.height) } ?? image.size
+            let displayedStrokeWidth = RectangleAnnotation.displayedStrokeWidth(
+                sourceSize: sourcePixelSize,
+                displayedSize: imageRect.size
+            )
 
             ZStack(alignment: .topLeading) {
                 Color.black
@@ -45,27 +51,13 @@ struct ImageCanvasView: View {
                         )
                 }
 
-                if isDragTool {
-                    Color.clear
-                        .contentShape(Rectangle())
-                        .gesture(
-                            DragGesture(minimumDistance: 0)
-                                .onChanged { value in
-                                    updateDraft(with: value, in: imageRect)
-                                }
-                                .onEnded { value in
-                                    commitDraft(with: value, in: imageRect)
-                                }
-                        )
-                }
-
                 ForEach(rectangles) { rectangle in
                     let frame = rectangle.rect(in: imageRect.size)
 
                     RoundedRectangle(cornerRadius: rectangle.cornerRadius(in: imageRect.size))
                         .stroke(
                             Self.strokeColor,
-                            lineWidth: RectangleAnnotation.strokeWidth(for: imageRect.size)
+                            lineWidth: displayedStrokeWidth
                         )
                         .frame(width: frame.width, height: frame.height)
                         .position(
@@ -96,8 +88,26 @@ struct ImageCanvasView: View {
                         )
                 }
 
+                if isDragTool {
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .gesture(
+                            DragGesture(minimumDistance: 0)
+                                .onChanged { value in
+                                    updateDraft(with: value, in: imageRect)
+                                }
+                                .onEnded { value in
+                                    commitDraft(with: value, in: imageRect)
+                                }
+                        )
+                }
+
                 if let draftRect {
-                    draftOverlay(for: draftRect, in: imageRect)
+                    draftOverlay(
+                        for: draftRect,
+                        in: imageRect,
+                        strokeWidth: displayedStrokeWidth
+                    )
                 }
 
                 if selectedTool == .text {
@@ -123,7 +133,11 @@ struct ImageCanvasView: View {
     }
 
     @ViewBuilder
-    private func draftOverlay(for rect: CGRect, in imageRect: CGRect) -> some View {
+    private func draftOverlay(
+        for rect: CGRect,
+        in imageRect: CGRect,
+        strokeWidth: CGFloat
+    ) -> some View {
         Group {
             if selectedTool == .rectangle {
                 RoundedRectangle(
@@ -135,7 +149,7 @@ struct ImageCanvasView: View {
                 )
                 .stroke(
                     Self.strokeColor,
-                    lineWidth: RectangleAnnotation.strokeWidth(for: imageRect.size)
+                    lineWidth: strokeWidth
                 )
             } else {
                 Rectangle()

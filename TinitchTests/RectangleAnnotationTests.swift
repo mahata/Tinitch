@@ -106,6 +106,21 @@ struct RectangleAnnotationTests {
     }
 
     @Test
+    func scalesDisplayedStrokeWidthFromSourcePixels() {
+        let enlarged = RectangleAnnotation.displayedStrokeWidth(
+            sourceSize: CGSize(width: 100, height: 100),
+            displayedSize: CGSize(width: 400, height: 400)
+        )
+        let reduced = RectangleAnnotation.displayedStrokeWidth(
+            sourceSize: CGSize(width: 2000, height: 1000),
+            displayedSize: CGSize(width: 1000, height: 500)
+        )
+
+        #expect(enlarged == 8)
+        #expect(reduced == 2.5)
+    }
+
+    @Test
     func scalesCornerRadiusWithShorterSide() {
         let annotation = RectangleAnnotation(
             normalizedRect: CGRect(x: 0.25, y: 0.25, width: 0.5, height: 0.5)

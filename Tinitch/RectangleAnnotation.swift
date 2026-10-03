@@ -31,6 +31,18 @@ struct RectangleAnnotation: Identifiable, Equatable {
         return max(shorterSide * strokeWidthRatio, minimumStrokeWidth)
     }
 
+    static func displayedStrokeWidth(sourceSize: CGSize, displayedSize: CGSize) -> CGFloat {
+        guard sourceSize.width > 0, sourceSize.height > 0 else {
+            return minimumStrokeWidth
+        }
+
+        let scale = min(
+            displayedSize.width / sourceSize.width,
+            displayedSize.height / sourceSize.height
+        )
+        return strokeWidth(for: sourceSize) * scale
+    }
+
     func rect(in size: CGSize) -> CGRect {
         NormalizedRect.rect(for: normalizedRect, in: size)
     }
