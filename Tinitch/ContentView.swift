@@ -13,12 +13,14 @@ struct ContentView: View {
     @State private var selectedTool: Tool?
     @State private var annotations: [TextAnnotation] = []
     @State private var mosaicRegions: [MosaicRegion] = []
+    @State private var rectangles: [RectangleAnnotation] = []
     @State private var mosaicPreviewImage: NSImage?
 
     private let conversionService = ImageConversionService()
     private let previewLoader = ImagePreviewLoader()
     private let annotationRenderer = AnnotationRenderer()
     private let mosaicRenderer = MosaicRenderer()
+    private let rectangleRenderer = RectangleRenderer()
 
     var body: some View {
         Group {
@@ -99,6 +101,7 @@ struct ContentView: View {
                 image: mosaicPreviewImage ?? image,
                 annotations: $annotations,
                 mosaicRegions: $mosaicRegions,
+                rectangles: $rectangles,
                 selectedTool: selectedTool
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -202,6 +205,7 @@ struct ContentView: View {
             temporaryInputURL = isTemporary ? inputURL : nil
             annotations = []
             mosaicRegions = []
+            rectangles = []
             mosaicPreviewImage = nil
             outputURL = nil
             errorMessage = nil
@@ -249,14 +253,21 @@ struct ContentView: View {
             do {
                 let visibleAnnotations = annotations.filter(\.hasVisibleText)
                 let visibleRegions = mosaicRegions.filter(\.isVisible)
+                let visibleRectangles = rectangles.filter(\.isVisible)
 
-                if visibleAnnotations.isEmpty, visibleRegions.isEmpty {
+                if visibleAnnotations.isEmpty, visibleRegions.isEmpty, visibleRectangles.isEmpty {
                     try await conversionService.convert(inputURL: inputURL, outputURL: destinationURL)
                 } else if let previewImage {
                     var renderedImage = try mosaicRenderer.render(
                         image: previewImage,
                         regions: visibleRegions
                     )
+                    if !visibleRectangles.isEmpty {
+                        renderedImage = try rectangleRenderer.render(
+                            sourceImage: renderedImage,
+                            rectangles: visibleRectangles
+                        )
+                    }
                     if !visibleAnnotations.isEmpty {
                         renderedImage = try annotationRenderer.render(
                             sourceImage: renderedImage,

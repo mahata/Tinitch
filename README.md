@@ -14,10 +14,13 @@ PNG:
 4. Select the **Mosaic** tool and drag across the image to pixelate an area.
    The preview updates as soon as the drag ends. Click inside a mosaic to
    remove it.
-5. Click **Save as PNG...** and choose where to save the output. Images that
+5. Select the **Rectangle** tool and drag across the image to outline an area
+   with a red rounded rectangle. Click inside a rectangle to remove it.
+6. Click **Save as PNG...** and choose where to save the output. Images that
    are not JPEG or PNG can still be previewed, but cannot be converted yet.
-6. Tinitch writes the converted image as a PNG, including any mosaics and
-   overlay letters. Mosaics are applied first, so labels stay sharp.
+7. Tinitch writes the converted image as a PNG, including any mosaics,
+   rectangles, and overlay letters. Mosaics are applied first, so outlines and
+   labels stay sharp.
 
 ## Requirements
 

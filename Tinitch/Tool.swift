@@ -1,6 +1,7 @@
 enum Tool: String, CaseIterable, Identifiable {
     case text
     case mosaic
+    case rectangle
 
     var id: String { rawValue }
 
@@ -10,6 +11,8 @@ enum Tool: String, CaseIterable, Identifiable {
             "Text"
         case .mosaic:
             "Mosaic"
+        case .rectangle:
+            "Rectangle"
         }
     }
 
@@ -19,6 +22,8 @@ enum Tool: String, CaseIterable, Identifiable {
             "textformat"
         case .mosaic:
             "squareshape.split.3x3"
+        case .rectangle:
+            "rectangle"
         }
     }
 
@@ -28,6 +33,8 @@ enum Tool: String, CaseIterable, Identifiable {
             "Click the image to add letters."
         case .mosaic:
             "Drag over the image to pixelate an area. Click a mosaic to remove it."
+        case .rectangle:
+            "Drag over the image to outline an area. Click a rectangle to remove it."
         }
     }
 }
