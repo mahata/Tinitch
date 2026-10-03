@@ -12,10 +12,13 @@ struct ContentView: View {
     @State private var isDropTargeted = false
     @State private var selectedTool: Tool?
     @State private var annotations: [TextAnnotation] = []
+    @State private var mosaicRegions: [MosaicRegion] = []
+    @State private var mosaicPreviewImage: NSImage?
 
     private let conversionService = ImageConversionService()
     private let previewLoader = ImagePreviewLoader()
     private let annotationRenderer = AnnotationRenderer()
+    private let mosaicRenderer = MosaicRenderer()
 
     var body: some View {
         Group {
@@ -93,11 +96,30 @@ struct ContentView: View {
             sidebar
             Divider()
             ImageCanvasView(
-                image: image,
+                image: mosaicPreviewImage ?? image,
                 annotations: $annotations,
-                isTextToolActive: selectedTool == .text
+                mosaicRegions: $mosaicRegions,
+                selectedTool: selectedTool
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .onChange(of: mosaicRegions) { _, _ in
+                updateMosaicPreview()
+            }
+        }
+    }
+
+    private func updateMosaicPreview() {
+        guard let previewImage, !mosaicRegions.filter(\.isVisible).isEmpty else {
+            mosaicPreviewImage = nil
+            return
+        }
+
+        do {
+            let rendered = try mosaicRenderer.render(image: previewImage, regions: mosaicRegions)
+            mosaicPreviewImage = NSImage(cgImage: rendered, size: previewImage.size)
+        } catch {
+            mosaicPreviewImage = nil
+            errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
         }
     }
 
@@ -179,6 +201,8 @@ struct ContentView: View {
             previewImage = image
             temporaryInputURL = isTemporary ? inputURL : nil
             annotations = []
+            mosaicRegions = []
+            mosaicPreviewImage = nil
             outputURL = nil
             errorMessage = nil
         } catch {
@@ -223,14 +247,22 @@ struct ContentView: View {
 
         Task {
             do {
-                let annotatedAnnotations = annotations.filter(\.hasVisibleText)
-                if annotatedAnnotations.isEmpty {
+                let visibleAnnotations = annotations.filter(\.hasVisibleText)
+                let visibleRegions = mosaicRegions.filter(\.isVisible)
+
+                if visibleAnnotations.isEmpty, visibleRegions.isEmpty {
                     try await conversionService.convert(inputURL: inputURL, outputURL: destinationURL)
                 } else if let previewImage {
-                    let renderedImage = try annotationRenderer.render(
+                    var renderedImage = try mosaicRenderer.render(
                         image: previewImage,
-                        annotations: annotatedAnnotations
+                        regions: visibleRegions
                     )
+                    if !visibleAnnotations.isEmpty {
+                        renderedImage = try annotationRenderer.render(
+                            sourceImage: renderedImage,
+                            annotations: visibleAnnotations
+                        )
+                    }
                     try await conversionService.write(image: renderedImage, to: destinationURL)
                 } else {
                     throw ImageConversionService.ConversionError.unableToDecode

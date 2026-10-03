@@ -23,6 +23,10 @@
 		A10000000000000000000014 /* TextAnnotationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000017 /* TextAnnotationTests.swift */; };
 		A10000000000000000000015 /* ImageFitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000018 /* ImageFitTests.swift */; };
 		A10000000000000000000016 /* AnnotationRendererTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000019 /* AnnotationRendererTests.swift */; };
+		A10000000000000000000017 /* MosaicRegion.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000020 /* MosaicRegion.swift */; };
+		A10000000000000000000018 /* MosaicRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000021 /* MosaicRenderer.swift */; };
+		A10000000000000000000019 /* MosaicRegionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000022 /* MosaicRegionTests.swift */; };
+		A10000000000000000000020 /* MosaicRendererTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000023 /* MosaicRendererTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -55,6 +59,10 @@
 		A20000000000000000000017 /* TextAnnotationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextAnnotationTests.swift; sourceTree = "<group>"; };
 		A20000000000000000000018 /* ImageFitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageFitTests.swift; sourceTree = "<group>"; };
 		A20000000000000000000019 /* AnnotationRendererTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationRendererTests.swift; sourceTree = "<group>"; };
+		A20000000000000000000020 /* MosaicRegion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MosaicRegion.swift; sourceTree = "<group>"; };
+		A20000000000000000000021 /* MosaicRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MosaicRenderer.swift; sourceTree = "<group>"; };
+		A20000000000000000000022 /* MosaicRegionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MosaicRegionTests.swift; sourceTree = "<group>"; };
+		A20000000000000000000023 /* MosaicRendererTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MosaicRendererTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -97,6 +105,8 @@
 				A20000000000000000000014 /* Tool.swift */,
 				A20000000000000000000015 /* ImageCanvasView.swift */,
 				A20000000000000000000016 /* ToolPickerView.swift */,
+				A20000000000000000000020 /* MosaicRegion.swift */,
+				A20000000000000000000021 /* MosaicRenderer.swift */,
 				A20000000000000000000004 /* Assets.xcassets */,
 				A20000000000000000000005 /* Tinitch.entitlements */,
 			);
@@ -111,6 +121,8 @@
 				A20000000000000000000017 /* TextAnnotationTests.swift */,
 				A20000000000000000000018 /* ImageFitTests.swift */,
 				A20000000000000000000019 /* AnnotationRendererTests.swift */,
+				A20000000000000000000022 /* MosaicRegionTests.swift */,
+				A20000000000000000000023 /* MosaicRendererTests.swift */,
 			);
 			path = TinitchTests;
 			sourceTree = "<group>";
@@ -233,6 +245,8 @@
 				A10000000000000000000011 /* Tool.swift in Sources */,
 				A10000000000000000000012 /* ImageCanvasView.swift in Sources */,
 				A10000000000000000000013 /* ToolPickerView.swift in Sources */,
+				A10000000000000000000017 /* MosaicRegion.swift in Sources */,
+				A10000000000000000000018 /* MosaicRenderer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -245,6 +259,8 @@
 				A10000000000000000000014 /* TextAnnotationTests.swift in Sources */,
 				A10000000000000000000015 /* ImageFitTests.swift in Sources */,
 				A10000000000000000000016 /* AnnotationRendererTests.swift in Sources */,
+				A10000000000000000000019 /* MosaicRegionTests.swift in Sources */,
+				A10000000000000000000020 /* MosaicRendererTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
