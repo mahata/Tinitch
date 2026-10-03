@@ -1,10 +1,13 @@
 import CoreGraphics
 import Foundation
 
-struct MosaicRegion: Identifiable, Equatable {
-    static let blockSizeRatio: CGFloat = 0.02
-    static let minimumBlockSize: CGFloat = 4
+struct RectangleAnnotation: Identifiable, Equatable {
+    static let strokeWidthRatio: CGFloat = 0.005
+    static let minimumStrokeWidth: CGFloat = 2
+    static let cornerRadiusRatio: CGFloat = 0.015
     static let minimumNormalizedSize: CGFloat = 0.01
+    static let strokeColorComponents: (red: CGFloat, green: CGFloat, blue: CGFloat) =
+        (1, 0.17, 0.13)
 
     let id: UUID
     var normalizedRect: CGRect
@@ -23,13 +26,20 @@ struct MosaicRegion: Identifiable, Equatable {
         NormalizedRect.make(from: start, to: end, in: size)
     }
 
-    static func blockSize(for size: CGSize) -> CGFloat {
+    static func strokeWidth(for size: CGSize) -> CGFloat {
         let shorterSide = min(size.width, size.height)
-        return max(shorterSide * blockSizeRatio, minimumBlockSize)
+        return max(shorterSide * strokeWidthRatio, minimumStrokeWidth)
     }
 
     func rect(in size: CGSize) -> CGRect {
         NormalizedRect.rect(for: normalizedRect, in: size)
+    }
+
+    func cornerRadius(in size: CGSize) -> CGFloat {
+        let shorterSide = min(size.width, size.height)
+        let pixelRect = rect(in: size)
+        let shorterEdge = min(pixelRect.width, pixelRect.height)
+        return min(shorterSide * Self.cornerRadiusRatio, shorterEdge / 2)
     }
 
     func contains(normalizedPoint point: CGPoint) -> Bool {
