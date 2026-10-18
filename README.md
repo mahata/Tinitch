@@ -50,8 +50,8 @@ set's `Contents.json`.
 
 ## Release
 
-Every successful CI run caused by a push to `main` builds an unsigned macOS
-disk image and publishes it as a GitHub Release. Pull requests never publish
+Every successful CI run caused by a push to `main` builds a Developer ID signed
+and notarized macOS disk image and publishes it as a GitHub Release. Pull requests never publish
 releases. Pushes that change only Markdown files, `LICENSE`, `.gitignore`, or
 the Dependabot configuration do not run CI, so they do not publish a release
 either.
@@ -75,8 +75,25 @@ gh release download v0.1.0 --repo mahata/Tinitch
 shasum -a 256 -c Tinitch-0.1.0.dmg.sha256
 ```
 
-The disk image contains an unsigned app, so macOS may require opening it with
-**Control-click > Open** the first time. Developer ID signing and notarization
-can be added later for public distribution.
+The workflow signs the app with Hardened Runtime and the entitlements in
+`Tinitch/Tinitch.entitlements`, signs the disk image, notarizes it with
+`notarytool`, and staples the ticket, so Gatekeeper opens it without a
+warning. It requires these repository secrets:
+
+| Secret | Contents |
+| --- | --- |
+| `MACOS_CERTIFICATE` | Base64-encoded `.p12` export of the Developer ID Application certificate and its private key |
+| `MACOS_CERTIFICATE_PASSWORD` | Password of that `.p12` file |
+| `DEVELOPER_ID_APPLICATION` | Signing identity, such as `Developer ID Application: Name (TEAMID)` |
+| `APPLE_API_KEY` | Base64-encoded App Store Connect API key (`AuthKey_<id>.p8`) |
+| `APPLE_API_KEY_ID` | Key ID of that API key |
+| `APPLE_API_ISSUER_ID` | Issuer ID of the App Store Connect team |
+
+For example, register the base64-encoded files with:
+
+```sh
+base64 -i Certificates.p12 | gh secret set MACOS_CERTIFICATE --repo mahata/Tinitch
+base64 -i AuthKey_XXXXXXXXXX.p8 | gh secret set APPLE_API_KEY --repo mahata/Tinitch
+```
 
 Screenshots, resizing, and batch conversion are not included yet.
