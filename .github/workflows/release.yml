@@ -140,11 +140,54 @@ jobs:
             exit 1
           fi
 
-      - name: Create disk image
+      - name: Import signing certificate
         if: steps.version.outputs.should_release == 'true'
         env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          KEYCHAIN_PATH="$RUNNER_TEMP/tinitch-signing.keychain-db"
+          KEYCHAIN_PASSWORD="$(openssl rand -hex 32)"
+          printf '%s' "$MACOS_CERTIFICATE" | base64 -D > "$RUNNER_TEMP/certificate.p12"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$RUNNER_TEMP/certificate.p12" \
+            -P "$MACOS_CERTIFICATE_PASSWORD" \
+            -A \
+            -t cert \
+            -f pkcs12 \
+            -k "$KEYCHAIN_PATH"
+          security set-key-partition-list \
+            -S apple-tool:,apple: \
+            -k "$KEYCHAIN_PASSWORD" \
+            "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH"
+
+      - name: Sign app
+        if: steps.version.outputs.should_release == 'true'
+        env:
+          CODESIGN_IDENTITY: ${{ secrets.DEVELOPER_ID_APPLICATION }}
+        run: |
+          set -euo pipefail
+          APP_PATH="$RUNNER_TEMP/Tinitch.xcarchive/Products/Applications/Tinitch.app"
+          codesign \
+            --force \
+            --sign "$CODESIGN_IDENTITY" \
+            --options runtime \
+            --timestamp \
+            --entitlements Tinitch/Tinitch.entitlements \
+            "$APP_PATH"
+          codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+
+      - name: Create signed disk image
+        if: steps.version.outputs.should_release == 'true'
+        env:
+          CODESIGN_IDENTITY: ${{ secrets.DEVELOPER_ID_APPLICATION }}
           VERSION: ${{ steps.version.outputs.number }}
         run: |
+          set -euo pipefail
           mkdir -p artifacts "$RUNNER_TEMP/Tinitch-dmg"
           ditto "$RUNNER_TEMP/Tinitch.xcarchive/Products/Applications/Tinitch.app" \
             "$RUNNER_TEMP/Tinitch-dmg/Tinitch.app"
@@ -153,6 +196,37 @@ jobs:
             -srcfolder "$RUNNER_TEMP/Tinitch-dmg" \
             -ov \
             -format UDZO \
+            "artifacts/Tinitch-${VERSION}.dmg"
+          codesign \
+            --force \
+            --sign "$CODESIGN_IDENTITY" \
+            --timestamp \
+            "artifacts/Tinitch-${VERSION}.dmg"
+          codesign --verify --strict --verbose=2 "artifacts/Tinitch-${VERSION}.dmg"
+
+      - name: Notarize and staple disk image
+        if: steps.version.outputs.should_release == 'true'
+        env:
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
+          VERSION: ${{ steps.version.outputs.number }}
+        run: |
+          set -euo pipefail
+          API_KEY_PATH="$RUNNER_TEMP/AuthKey_${APPLE_API_KEY_ID}.p8"
+          printf '%s' "$APPLE_API_KEY" | base64 -D > "$API_KEY_PATH"
+          xcrun notarytool submit \
+            "artifacts/Tinitch-${VERSION}.dmg" \
+            --key "$API_KEY_PATH" \
+            --key-id "$APPLE_API_KEY_ID" \
+            --issuer "$APPLE_API_ISSUER_ID" \
+            --wait
+          xcrun stapler staple "artifacts/Tinitch-${VERSION}.dmg"
+          xcrun stapler validate "artifacts/Tinitch-${VERSION}.dmg"
+          spctl --assess \
+            --type open \
+            --context context:primary-signature \
+            --verbose=2 \
             "artifacts/Tinitch-${VERSION}.dmg"
           cd artifacts
           shasum -a 256 "Tinitch-${VERSION}.dmg" > "Tinitch-${VERSION}.dmg.sha256"
@@ -178,3 +252,9 @@ jobs:
               --generate-notes \
               --title "Tinitch ${VERSION}"
           fi
+
+      - name: Clean up signing material
+        if: always() && steps.version.outputs.should_release == 'true'
+        run: |
+          security delete-keychain "$RUNNER_TEMP/tinitch-signing.keychain-db" || true
+          rm -f "$RUNNER_TEMP/certificate.p12" "$RUNNER_TEMP"/AuthKey_*.p8
